@@ -56,7 +56,7 @@ RSpec.describe Api::V1::ProductsController, type: :controller do
       before(:each) do
         user = FactoryGirl.create :user
         @invalid_product_attributes = { title: "Smart TV", price: "Twelve dollars" }
-        api_authorization_header = user.auth_token
+        api_authorization_header user.auth_token
         post :create, { user_id: user.id, product: @invalid_product_attributes }
       end
 
@@ -74,4 +74,43 @@ RSpec.describe Api::V1::ProductsController, type: :controller do
     end
   end
 
+  describe "PUT/PATCH #update" do
+
+    before(:each) do
+      @user = FactoryGirl.create :user
+      @product = FactoryGirl.create :product, user: @user
+      api_authorization_header @user.auth_token
+    end
+
+    context "when successfully updated" do
+      before(:each) do
+        patch :update, { user_id: @user.id, id: @product.id, product: { title: "An expensive TV" } }
+      end
+
+      it "renders json representation for the updated product" do
+        product_response = json_response
+        expect(product_response[:title]).to eql "An expensive TV"
+      end
+
+      it { should respond_with 200 }
+    end
+
+    context "when not updated" do
+      before(:each) do
+        patch :update, { user_id: @user.id, id: @product.id, product: { price: "two hundred" } }
+      end
+
+      it "renders a json error" do
+        product_response = json_response
+        expect(product_response).to have_key(:errors)
+      end
+
+      it "renders json error and why the product could not be created" do
+        product_response = json_response
+        expect(product_response[:errors][:price]).to include "is not a number"
+      end
+      
+      it { should respond_with 422 }
+    end
+  end
 end
