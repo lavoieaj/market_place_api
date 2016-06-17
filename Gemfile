@@ -38,11 +38,11 @@ group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
   gem 'rspec-rails', "~> 3.4"
+  gem 'factory_girl_rails'
+  gem 'ffaker'
 end
 
 group :test do
-  gem 'factory_girl_rails'
-  gem 'ffaker'
   gem 'shoulda-matchers'
 end
 
