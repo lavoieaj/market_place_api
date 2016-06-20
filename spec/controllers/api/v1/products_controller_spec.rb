@@ -10,12 +10,12 @@ RSpec.describe Api::V1::ProductsController, type: :controller do
     end
 
     it "returns the information about a reporter on a hash" do
-      product_response = json_response
+      product_response = json_response[:product]
       expect(product_response[:title]).to eql @product.title
     end
 
     it "has the user as a embeded object" do
-      product_response = json_response
+      product_response = json_response[:product]
       expect(product_response[:user][:email]).to eql @product.user.email
     end
 
@@ -26,22 +26,42 @@ RSpec.describe Api::V1::ProductsController, type: :controller do
 
     before(:each) do
       5.times { FactoryGirl.create :product }
-      get :index
     end
 
-    it "returns 4 records from the database" do
-      products_response = json_response
-      expect(products_response.length).to eq(5)
+    context "when not receiving any product_ids parameter" do
+      before(:each) do
+        get :index
+      end
+
+      it "returns 5 records from the database" do
+        products_response = json_response
+        expect(products_response[:products].length).to eq(5)
+      end
+
+      it "returns the user object into each product" do
+        products_response = json_response[:products]
+        products_response.each do |product_response|
+          expect(product_response[:user]).to be_present
+        end
+      end
+
+      it { should respond_with 200 }
     end
 
-    it "returns the user object into each product" do
-      products_response = json_response
-      products_response.each do |product_response|
-        expect(product_response[:user]).to be_present
+    context "when the product_ids parameter is sent" do
+      before(:each) do
+        @user = FactoryGirl.create :user
+        3.times { FactoryGirl.create :product, user: @user }
+        get :index, product_ids: @user.product_ids
+      end
+
+      it "returns just the products that belong to the user" do
+        products_response = json_response[:products]
+        products_response.each do |product_response|
+          expect(product_response[:user][:email]).to eql @user.email
+        end
       end
     end
-
-    it { should respond_with 200 }
   end
 
   describe "POST #create" do
@@ -56,7 +76,7 @@ RSpec.describe Api::V1::ProductsController, type: :controller do
       end
 
       it "renders the json representation for the product record just created" do
-        product_response = json_response
+        product_response = json_response[:product]
         expect(product_response[:title]).to eql @product_attributes[:title]
       end
 
@@ -100,7 +120,7 @@ RSpec.describe Api::V1::ProductsController, type: :controller do
       end
 
       it "renders json representation for the updated product" do
-        product_response = json_response
+        product_response = json_response[:product]
         expect(product_response[:title]).to eql "An expensive TV"
       end
 
