@@ -1,6 +1,6 @@
 FactoryGirl.define do
   factory :order do
     user nil
-    total "9.99"
+    total 0
   end
 end
