@@ -17,4 +17,7 @@ RSpec.describe Product, type: :model do
   it { should_not be_published }
 
   it { should belong_to :user }
+
+  it { should have_many(:placements) }
+  it { should have_many(:orders).through(:placements) }
 end
